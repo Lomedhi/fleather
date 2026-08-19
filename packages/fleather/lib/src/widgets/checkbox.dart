@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'theme.dart';
+
 /// A Material Design checkbox.
 ///
 /// The checkbox itself does not maintain any state. Instead, when the state of
@@ -26,13 +28,13 @@ import 'package:flutter/material.dart';
 ///
 /// See also:
 ///
-///  * [CheckboxListTile], which combines this widget with a [ListTile] so that
-///    you can give the checkbox a label.
-///  * [Switch], a widget with semantics similar to [FleatherCheckbox].
-///  * [Radio], for selecting among a set of explicit values.
-///  * [Slider], for selecting a value in a range.
-///  * <https://material.io/design/components/selection-controls.html#checkboxes>
-///  * <https://material.io/design/components/lists.html#types>
+///   * [CheckboxListTile], which combines this widget with a [ListTile] so that
+///     you can give the checkbox a label.
+///   * [Switch], a widget with semantics similar to [FleatherCheckbox].
+///   * [Radio], for selecting among a set of explicit values.
+///   * [Slider], for selecting a value in a range.
+///   * <https://material.io/design/components/selection-controls.html#checkboxes>
+///   * <https://material.io/design/components/lists.html#types>
 class FleatherCheckbox extends StatefulWidget {
   /// Creates a Material Design checkbox.
   ///
@@ -54,6 +56,13 @@ class FleatherCheckbox extends StatefulWidget {
     super.key,
     required this.value,
     required this.onChanged,
+    this.tristate = false,
+    this.mouseCursor,
+    this.fillColor,
+    this.checkColor,
+    this.overlayColor,
+    this.shape,
+    this.side,
   });
 
   /// Whether this checkbox is checked.
@@ -83,6 +92,28 @@ class FleatherCheckbox extends StatefulWidget {
   /// )
   /// ```
   final ValueChanged<bool?>? onChanged;
+
+  /// If true, the checkbox's value can be true, false, or null.
+  final bool tristate;
+
+  /// The cursor for a mouse pointer when it enters or is hovering over the
+  /// widget.
+  final WidgetStateProperty<MouseCursor?>? mouseCursor;
+
+  /// The color that fills the checkbox when it is checked or in indeterminate state.
+  final WidgetStateProperty<Color?>? fillColor;
+
+  /// The color to use for the check icon when the checkbox is checked.
+  final WidgetStateProperty<Color?>? checkColor;
+
+  /// The color for the checkbox's Material background overlay.
+  final WidgetStateProperty<Color?>? overlayColor;
+
+  /// The shape of the checkbox's border.
+  final OutlinedBorder? shape;
+
+  /// The side of the checkbox's border.
+  final BorderSide? side;
 
   @override
   State<FleatherCheckbox> createState() => _FleatherCheckboxState();
@@ -118,7 +149,7 @@ class _FleatherCheckboxState extends State<FleatherCheckbox>
   ValueChanged<bool?>? get onChanged => widget.onChanged;
 
   @override
-  bool tristate = false;
+  bool get tristate => widget.tristate;
 
   @override
   bool? get value => widget.value;
@@ -136,51 +167,65 @@ class _FleatherCheckboxState extends State<FleatherCheckbox>
   @override
   Widget build(BuildContext context) {
     assert(debugCheckHasMaterial(context));
-    final CheckboxThemeData checkboxTheme = CheckboxTheme.of(context);
+
+    final fleatherTheme = FleatherTheme.of(context, nullOk: true);
+    final CheckboxThemeData checkboxTheme =
+        fleatherTheme?.data.checkboxTheme ?? CheckboxTheme.of(context);
     final CheckboxThemeData defaults = Theme.of(context).useMaterial3
         ? _CheckboxDefaultsM3(context)
         : _CheckboxDefaultsM2(context);
 
     final WidgetStateProperty<MouseCursor> effectiveMouseCursor =
         WidgetStateProperty.resolveWith<MouseCursor>((Set<WidgetState> states) {
-      return checkboxTheme.mouseCursor?.resolve(states) ??
+      return widget.mouseCursor?.resolve(states) ??
+          checkboxTheme.mouseCursor?.resolve(states) ??
           WidgetStateMouseCursor.clickable.resolve(states);
     });
+
+    final WidgetStateProperty<Color?>? effectiveFillColor =
+        widget.fillColor ?? checkboxTheme.fillColor;
+    final WidgetStateProperty<Color?>? effectiveOverlayColor =
+        widget.overlayColor ?? checkboxTheme.overlayColor;
+    final WidgetStateProperty<Color?>? effectiveCheckColor =
+        widget.checkColor ?? checkboxTheme.checkColor;
+
+    final OutlinedBorder? effectiveShape = widget.shape ?? checkboxTheme.shape;
+    final BorderSide? effectiveSide = widget.side ?? checkboxTheme.side;
 
     // Colors need to be resolved in selected and non selected states separately
     // so that they can be lerped between.
     final Set<WidgetState> activeStates = states..add(WidgetState.selected);
     final Set<WidgetState> inactiveStates = states
       ..remove(WidgetState.selected);
-    final Color? activeColor = checkboxTheme.fillColor?.resolve(activeStates);
+    final Color? activeColor = effectiveFillColor?.resolve(activeStates);
     final Color effectiveActiveColor =
         activeColor ?? defaults.fillColor!.resolve(activeStates)!;
     final Color? inactiveColor =
-        checkboxTheme.fillColor?.resolve(inactiveStates);
+        effectiveFillColor?.resolve(inactiveStates);
     final Color effectiveInactiveColor =
         inactiveColor ?? defaults.fillColor!.resolve(inactiveStates)!;
 
     final Set<WidgetState> focusedStates = states..add(WidgetState.focused);
     Color effectiveFocusOverlayColor =
-        checkboxTheme.overlayColor?.resolve(focusedStates) ??
+        effectiveOverlayColor?.resolve(focusedStates) ??
             defaults.overlayColor!.resolve(focusedStates)!;
 
     final Set<WidgetState> hoveredStates = states..add(WidgetState.hovered);
     Color effectiveHoverOverlayColor =
-        checkboxTheme.overlayColor?.resolve(hoveredStates) ??
+        effectiveOverlayColor?.resolve(hoveredStates) ??
             defaults.overlayColor!.resolve(hoveredStates)!;
 
     final Set<WidgetState> activePressedStates = activeStates
       ..add(WidgetState.pressed);
     final Color effectiveActivePressedOverlayColor =
-        checkboxTheme.overlayColor?.resolve(activePressedStates) ??
+        effectiveOverlayColor?.resolve(activePressedStates) ??
             activeColor?.withAlpha(kRadialReactionAlpha) ??
             defaults.overlayColor!.resolve(activePressedStates)!;
 
     final Set<WidgetState> inactivePressedStates = inactiveStates
       ..add(WidgetState.pressed);
     final Color effectiveInactivePressedOverlayColor =
-        checkboxTheme.overlayColor?.resolve(inactivePressedStates) ??
+        effectiveOverlayColor?.resolve(inactivePressedStates) ??
             inactiveColor?.withAlpha(kRadialReactionAlpha) ??
             defaults.overlayColor!.resolve(inactivePressedStates)!;
 
@@ -194,8 +239,8 @@ class _FleatherCheckboxState extends State<FleatherCheckbox>
     }
 
     final Set<WidgetState> checkStates = states;
-    final Color effectiveCheckColor =
-        checkboxTheme.checkColor?.resolve(checkStates) ??
+    final Color effectiveCheckColorResolved =
+        effectiveCheckColor?.resolve(checkStates) ??
             defaults.checkColor!.resolve(checkStates)!;
 
     const double effectiveSplashRadius = 0;
@@ -221,14 +266,14 @@ class _FleatherCheckboxState extends State<FleatherCheckbox>
           ..isHovered = states.contains(WidgetState.hovered)
           ..activeColor = effectiveActiveColor
           ..inactiveColor = effectiveInactiveColor
-          ..checkColor = effectiveCheckColor
+          ..checkColor = effectiveCheckColorResolved
           ..value = value
           ..previousValue = _previousValue
-          ..shape = checkboxTheme.shape ??
+          ..shape = effectiveShape ??
               const RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.circular(1.0)),
               )
-          ..side = _resolveSide(checkboxTheme.side),
+          ..side = _resolveSide(effectiveSide),
       ),
     );
   }
