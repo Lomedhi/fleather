@@ -98,6 +98,12 @@ class FleatherThemeData {
   /// Style theme for bullet and number lists.
   final TextBlockTheme lists;
 
+  /// Style theme specifically for check lists.
+  final TextBlockTheme checkList;
+
+  /// Custom theme settings for the FleatherCheckbox widget itself.
+  final CheckboxThemeData? checkboxTheme;
+
   /// Style theme for quote blocks.
   final TextBlockTheme quote;
 
@@ -125,11 +131,13 @@ class FleatherThemeData {
     required this.heading5,
     required this.heading6,
     required this.lists,
+    TextBlockTheme? checkList,
+    this.checkboxTheme,
     required this.quote,
     required this.code,
     required this.horizontalRule,
     this.strutStyle,
-  });
+  }) : checkList = checkList ?? lists;
 
   factory FleatherThemeData.fallback(BuildContext context) {
     final themeData = Theme.of(context);
@@ -160,6 +168,12 @@ class FleatherThemeData {
       fontFamily: fontFamily,
     );
 
+    final listTheme = TextBlockTheme(
+      style: baseStyle,
+      spacing: baseSpacing,
+      lineSpacing: const VerticalSpacing(bottom: 0),
+    );
+
     return FleatherThemeData(
       bold: const TextStyle(fontWeight: FontWeight.bold),
       italic: const TextStyle(fontStyle: FontStyle.italic),
@@ -186,7 +200,6 @@ class FleatherThemeData {
       paragraph: TextBlockTheme(
         style: baseStyle,
         spacing: baseSpacing,
-        // lineSpacing is not relevant for paragraphs since they consist of one line
       ),
       heading1: TextBlockTheme(
         style: defaultStyle.style.copyWith(
@@ -242,11 +255,9 @@ class FleatherThemeData {
             fontWeight: FontWeight.w500),
         spacing: const VerticalSpacing(bottom: 0.0, top: 8.0),
       ),
-      lists: TextBlockTheme(
-        style: baseStyle,
-        spacing: baseSpacing,
-        lineSpacing: const VerticalSpacing(bottom: 0),
-      ),
+      lists: listTheme,
+      checkList: listTheme,
+      checkboxTheme: CheckboxTheme.of(context),
       quote: TextBlockTheme(
         style: TextStyle(color: baseStyle.color?.withValues(alpha: 0.6)),
         spacing: baseSpacing,
@@ -296,6 +307,8 @@ class FleatherThemeData {
     TextBlockTheme? heading5,
     TextBlockTheme? heading6,
     TextBlockTheme? lists,
+    TextBlockTheme? checkList,
+    CheckboxThemeData? checkboxTheme,
     TextBlockTheme? quote,
     TextBlockTheme? code,
     HorizontalRuleThemeData? horizontalRuleThemeData,
@@ -316,6 +329,8 @@ class FleatherThemeData {
       heading5: heading5 ?? this.heading5,
       heading6: heading6 ?? this.heading6,
       lists: lists ?? this.lists,
+      checkList: checkList ?? this.checkList,
+      checkboxTheme: checkboxTheme ?? this.checkboxTheme,
       quote: quote ?? this.quote,
       code: code ?? this.code,
       horizontalRule: horizontalRuleThemeData ?? horizontalRule,
@@ -339,6 +354,8 @@ class FleatherThemeData {
       heading5: other.heading5,
       heading6: other.heading6,
       lists: other.lists,
+      checkList: other.checkList,
+      checkboxTheme: other.checkboxTheme,
       quote: other.quote,
       code: other.code,
       horizontalRuleThemeData: other.horizontalRule,
@@ -357,7 +374,6 @@ class TextBlockTheme {
   final VerticalSpacing spacing;
 
   /// Vertical spacing for individual lines within a text block.
-  ///
   final VerticalSpacing lineSpacing;
 
   /// Decoration of a text block.
